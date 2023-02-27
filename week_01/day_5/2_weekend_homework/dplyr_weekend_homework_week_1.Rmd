@@ -1,0 +1,151 @@
+---
+title: "weekend_homework_week_1"
+output: html_document
+date: "2023-02-25"
+---
+```{r}
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+```
+1. investigating the data: what are the variable names, variable types, dimensions, how many missing values, the columns name and the head of our dataser.
+```{r}
+book_csv <- read_csv('data/books.csv')
+glimpse(book_csv)
+dim(book_csv)
+names(book_csv)
+sum(is.na(book_csv))
+head(book_csv)
+
+```
+2. create a new table without (rowid, isbn13, bookID, isbn) 
+
+
+```{r}
+ books <- book_csv %>% 
+  select(-rowid, -isbn13, -bookID, -isbn)  
+
+```
+
+3. what are the book with highest average_rating? 
+```{r}
+books %>% 
+slice_max(average_rating)
+# this reveals that 22 books are rated 5.
+```
+
+4. what are the books with average_rating higher than the total_average_rating
+```{r}
+books %>% 
+mutate(total_average_rating = mean(average_rating), .after = average_rating) %>%
+  mutate(above_total_average_rating = (average_rating > total_average_rating),
+         .after = total_average_rating ) %>% 
+    filter(above_total_average_rating == TRUE)  
+# this code reveals that 5,960 books are rated above the total avg rating.
+
+```
+
+
+5. plot the 5 authors with highest number of books published.
+
+```{r}
+ best_publishing_authors <- books %>% 
+group_by(authors) %>% 
+summarise(nber_of_books_puplished = n()) %>% 
+slice_max(nber_of_books_puplished, n = 5)
+ggplot(best_publishing_authors, aes(x = authors,y = nber_of_books_puplished, fill = authors)) + geom_col(stat='identity') +
+labs( title = "Best Publishing Authors")
+
+
+best_publishing_authors
+
+
+```
+
+number of Publishers used by the Stephen King
+```{r}
+books %>% 
+  select(title, authors, publisher) %>% 
+  filter(authors == "Stephen King") %>% 
+group_by(publisher)
+# Stephen King has written 40 books and they were published by 26 publishers.
+```
+
+6. plot the top 10 most rated books and their authors.
+
+```{r}
+most_rated_books <- books %>% 
+    select(title, authors, num_pages,average_rating, ratings_count) %>% 
+slice_max(ratings_count, n = 10) 
+
+ggplot(most_rated_books, aes(x = title, y = ratings_count, , fill = authors)) + geom_col(stat='identity') +theme(axis.text.x = element_text(angle = 90)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 35))
+                                                                                                                                        
+```
+4. nber of book published by each publisher. top 10
+
+```{r}
+books %>% 
+  group_by(publisher) %>% 
+summarise(number_book = n()) %>% 
+slice_max(number_book, n = 10)
+ # the above code gives the top 10 publisher in this data set.
+
+books %>% 
+  group_by(authors) 
+# this code reveals the number of authors in this data set, which is 6,639.
+
+books %>% 
+group_by(publisher)
+   # the above code gives the total number of publishers in this data set.
+
+
+  
+```
+
+5. authors of the top publisher, Vintage
+```{r}
+books %>% 
+  select(title, authors, publisher) %>% 
+  filter(publisher == "Vintage") %>% 
+group_by(authors)
+
+# from this code we see that Vintage has published books 318 books for 203 different authors.
+
+```
+6. ploting the books by year
+```{r}
+books_by_year<- books %>% 
+  mutate(year = format(as.Date(books$publication_date, format="%m/%d/%Y"),"%Y"), .after = publication_date) %>% 
+group_by(year) %>%   # here we can see that these books were published between 1900 and 2020
+  group_by(authors) 
+  #summarise(Number_of_book_per_year = n())
+
+  ggplot(books_by_year, aes(x = year, y = authors)) + geom_point() 
+labs( title = "books published between 1900 and 2020")
+
+```
+
+7. what is the year with most book published?
+
+```{r}
+books %>% 
+  mutate(year = format(as.Date(books$publication_date, format="%m/%d/%Y"),"%Y"), .after = publication_date) %>% 
+group_by(year) %>%   # here we can see that these books were published between 1900 and 2020
+  summarise(Number_of_book_per_year = n()) %>% 
+slice_max(Number_of_book_per_year)
+```
+8. sorting
+
+```{r}
+books %>% 
+  arrange(desc(average_rating), desc(title))
+
+
+books %>% 
+  arrange(desc(average_rating), title)
+```
+
+```
+

@@ -9,6 +9,11 @@ output:
   pdf_document:
     toc: yes
 ---
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, error = T, message = F, eval=FALSE)
@@ -80,8 +85,12 @@ Find the average tooth length for where the supplement is vitamin C.
 ```{r eval=FALSE}
 ToothGrowth %>%
   group_by(supp) %>% 
-  summarise(avg_len_vc = mean(len)) %>% 
-  filter(supp == "VC")
+  filter(supp == "VC") %>% 
+  summarise(avg_len_vc = mean(len)) 
+  
+ToothGrowth %>% 
+  filter(supp == "VC") %>%
+  summarise(avg_len_vc = mean(len)) 
 ```
 
 
@@ -91,9 +100,11 @@ ToothGrowth %>%
 Create a vector of animals (cat, dog, rabbit, horse), then use the `sample` function to get 10 random animals from those categories.
 
 ```{r eval=FALSE}
+set.seed(3)
 animals <- c("cat", "dog", "rabbit", "horse")
 
 sample(animals, 10, replace = TRUE)
+#sample_n (animals, 10, replace = TRUE) # must be a dataframe for sample_n
 
 ```
 
@@ -131,12 +142,12 @@ chickwts %>%
 Create a tibble with column `alphabet` which contains the English alphabet and column `numbers` which has a unique number for each letter. Then remove rows where the letter is B, C or D.
 
 ```{r eval=FALSE}
-tibble(alphabet = letters(),
-       numbers = 1:26) %>% 
-  filter(letter != c(b, C, d))
+tibble(alphabet = letters,
+       numbers = 1:26)%>% 
+  filter(!(letters %in% c("b", "c", "d")))
 
-tibble(alphabet = letters, numbers = 1:26) %>%
-  filter(!alphabet %in% c("B", "C", "D"))
+tibble(alphabet = LETTERS, numbers = 1:26) %>%
+  filter(!(alphabet %in% c("B", "C", "D")))
 ```
 
 
@@ -157,17 +168,23 @@ scent_ratings <- dplyr::tibble(
   rating = sample(c(0:5, NA), 50, replace = TRUE),
   PersonAge = rep(NA, 50)
 )
+
+
 ```
+
+
 
 Clean the variable names and drop missing ratings from `scent_ratings` and calculate an average rating per scent.
 
 ```{r eval=FALSE}
 scent_ratings %>% janitor::clean_names()
 
-scent_ratings %>% 
+ iris_mean <- scent_ratings %>% 
   drop_na(rating) %>% 
   group_by(SCENT) %>% 
-  summarise(mean_rating = mean(rating)) 
+  summarise(mean_rating = mean(rating)) %>% 
+summarise( total_mean = mean (mean_rating))  
+ # pull(total_mean)
   
 
 #mean(scent_ratings$rating, na.rm = TRUE)
