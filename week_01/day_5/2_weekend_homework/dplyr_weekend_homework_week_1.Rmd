@@ -125,6 +125,41 @@ group_by(year) %>%   # here we can see that these books were published between 1
   ggplot(books_by_year, aes(x = year, y = authors)) + geom_point() 
 labs( title = "books published between 1900 and 2020")
 
+####from jamie
+
+books_by_year <- books %>%
+  mutate(year = format(as.Date(books$publication_date,
+                               format="%m/%d/%Y"), "%Y"),
+         .after = publication_date) 
+
+  # group_by(year) %>%   # here we can see that these books were published between 1900 and 2020
+  # # group_by(authors)
+  # summarise(Number_of_book_per_year = n()) %>%
+  # ungroup()
+
+  ggplot(books_by_year, aes(x = year)) + 
+    geom_histogram(stat = "count") +
+    labs(title = "books published between 1900 and 2020") 
+    theme(axis.text.x = element_text(angle = 90))
+    
+
+    
+    ######from david
+    
+books_by_year<- books %>%
+  mutate(
+    year = year(as.Date(publication_date, format="%m/%d/%Y")), .after = publication_date)
+
+ggplot(books_by_year) +
+  aes(x = year) +
+  geom_histogram(colour = "white") +
+  labs(
+    x = "",
+    y = "Number of Books",
+    title = "Number of Books per year",
+    subtitle = "in GoodReads Data"
+
+
 ```
 
 7. what is the year with most book published?
@@ -146,6 +181,14 @@ books %>%
 books %>% 
   arrange(desc(average_rating), title)
 ```
+```{r}
+ best_publishing_authors <- books %>% 
+group_by(authors) %>% 
+summarise(nber_of_books_puplished = n()) %>% 
+slice_max(nber_of_books_puplished, n = 5)
+ggplot(best_publishing_authors, 
+       aes(x = nber_of_books_puplished,y = average_rating)) + geom_point() +
+ facet_wrap(~ authors)
 
 ```
 

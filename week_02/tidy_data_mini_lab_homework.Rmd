@@ -1,0 +1,85 @@
+---
+title: "Tidy Data Mini-Lab"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+    css: ../../../styles.css
+  pdf_document: default
+---
+
+**Duration: 30 minutes** 
+
+Now it's your turn to practice the verbs on a new dataset. Complete the following task:
+
+# MVP
+
+**Task 1.**  
+Load in the `country_data.csv` file and take a look at it. What needs changed in this to make it tidy? Which columns need made into long format, and which need spread to rows?
+
+```{r}
+country <- read_csv("data/country_data.csv")
+```
+<br>
+
+**Task 2.**  
+Do the appropriate pivoting of your columns using R  
+
+```{r}
+
+# we need to make the year longer and the type wider.
+
+country_longer <- pivot_longer(country,
+  cols = Y1999:Y2001,
+  names_to = "year",
+  values_to = "measuremrnts"
+)
+
+country_wider <- country_longer %>% 
+pivot_wider(
+            names_from = "type",
+            values_from = "measuremrnts")
+   
+country_longer  
+country_wider
+
+```
+
+
+
+<br>
+
+**Task 3.**  
+Separate the `country` variable so you have the name in one column and the number in another. 
+
+```{r}
+country_separed <- country_wider %>% 
+  separate(country, c("number_id", "name"), sep = "\\.")
+
+country_separed
+
+```
+
+
+<br>
+
+**Task 4.**  
+Unite the `code_letter` and `code_numb` variables so that they are both in one column, with no spaces separating them.   
+
+```{r}
+
+country_unite <- country_separed %>% 
+  unite(code_id, c("code_letter", "code_numb"), sep = ":")
+
+country_unite
+```
+5. reordering the columns
+
+```{r}
+country_ordered <- select(country_unite, code_id, name, number_id, year, population, cases)
+
+country_ordered
+```
+
