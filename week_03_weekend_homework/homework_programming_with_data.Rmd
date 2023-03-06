@@ -1,0 +1,169 @@
+---
+title: "Meteorites Weekend Homework"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+    css: ../../../styles.css
+  pdf_document: default
+---
+```{r}
+library(tidyverse)
+```
+
+
+# MVP
+
+The goal of this homework is to produce a reproducible analysis of some meteorites. Rather than work solely in a Notebook, we're going to write an R cleaning script as well. By the end you'll create:
+
+1. An .R file that cleans some data on meteorites.
+2. A .Rmd file that takes your cleaned data and performs some analysis.
+
+You will also write a short `README.md` that describes the structure of your project.
+
+The data you want to clean is in the file called `meteorite_landings.csv`. It comes from NASA and has information on meteorites that have been found up to the year 2013. 
+
+## The .R file
+
+To clean the data please do the following.
+
+1. Read the data into R
+```{r}
+meteorite <- read_csv("data/meteorite_landings.csv") 
+meteorite <- janitor::clean_names(meteorite)
+```
+
+2. Change the names of the variables to follow our naming standards.
+```{r}
+meteorite <- janitor::clean_names(meteorite)
+```
+
+3. Split the column `GeoLocation` into latitude and longitude, the new latitude and longitude columns should be numeric.
+```{r}
+meteorite_split <- meteorite %>% 
+  mutate( geo_location = gsub("[()]", "", meteorite$geo_location)) %>% 
+  separate(col = "geo_location", into = c("latitude" , "longitude"), sep = ", ")  
+  
+  
+meteorite_split
+  
+```
+
+
+```{r}
+meteorite_split <- meteorite_split %>% 
+mutate( latitude = as.numeric(latitude)) %>% 
+  mutate(longitude = as.numeric(longitude))
+
+```
+
+
+4. Replace any missing values in latitude and longitude with zeros.
+
+```{r}
+meteorite_replaced <- meteorite_split %>% 
+  #filter(is.na(longitude))
+  mutate(latitude = coalesce(latitude, 0)) %>% 
+   mutate(longitude = coalesce(longitude, 0)) 
+
+```
+
+5. Remove meteorites less than 1000g in weight from the data.
+```{r}
+meteorite_not_less_than_1000 <- meteorite_replaced %>% 
+  filter(mass_g >= 1000)
+  
+  
+```
+
+6. Order the data by the year of discovery.
+```{r}
+meteorite_ordered <- meteorite_not_less_than_1000 %>% 
+  arrange(desc(year))
+```
+
+
+## The .Rmd file
+
+In the .Rmd file please do the following.
+
+1. Read the cleaned data into your environment.
+
+```{r}
+meteorite_replaced
+
+```
+
+
+2. Find the names and years found for the 10 largest meteorites in the data.
+```{r}
+
+meteorite_largest <- meteorite_replaced %>% 
+  arrange(desc(mass_g)) %>% 
+ head(10) %>% 
+  select(name, year)
+  
+
+
+```
+
+
+3. Find the average mass of meteorites that were recorded falling, vs. those which were just found.
+```{r}
+meteorite_replaced_avg <- meteorite_replaced %>% 
+  #filter(is.na(mass_g))
+mutate(mass_g = coalesce(mass_g, median(mass_g, na.rm = TRUE)))  
+  # filter(is.na(mass_g))
+
+meteorite_replaced_avg %>% 
+  mutate(average_fell = mean(subset(meteorite_replaced_avg, fall== "Fell")$ mass_g)) %>% 
+ mutate(average_found = mean(subset(meteorite_replaced_avg, fall== "Found")$ mass_g)) %>% 
+  summarise ( average_fell ,  average_found) 
+
+  
+```
+
+4. Find the number of meteorites in each year, for every year since 2000.
+
+```{r}
+meteorite_by_year <-  meteorite_replaced %>% 
+  filter(year >= 2000) %>% 
+  group_by(year) %>% 
+  summarise(year_count = n())  
+
+
+ 
+  year1m <- meteorite_by_year$year_count [meteorite_by_year$year == 2000]
+  
+  class(meteorite_by_year)
+
+```
+
+5. Write a function called `get_meteorite_count()` that takes in two arguments: a dataframe and a year, and returns the phrase "In (input_year), there were (number of meteorites that year) meteorites." IF there are 1 or more meteorites that year. If there are no meteorites in the year, return the phrase "As far as we know, there were no meteorites that year".
+
+```{r}
+ get_meteorite_count <- function(dataframe, Y) {
+   
+   nber_meteorite <-  dataframe$year_count [dataframe$year == Y]
+   
+  
+     return( paste(c("In ",Y," there were ", nber_meteorite, " meteorites."), collapse = " "))
+  
+   
+   return( "As far as we know, there were no meteorites that year")}
+  
+ 
+
+get_meteorite_count(meteorite_by_year,2006)
+
+
+```
+
+
+
+## The README.md file
+
+Make a file called `README.md`. In this file we just want you to describe the structure of your project, and write a general summary of your code.
+
